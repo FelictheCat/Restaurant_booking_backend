@@ -22,7 +22,7 @@ router.post("/signup", async (req, res, next) => {
       errorMessage:
         "Password must follow this pattern (min 8 characters, max 20 characters, include lowercase, include uppercase, include number)",
     });
-    return; // now stop the route from continuing.
+    return; 
   }
 
   try {
@@ -39,7 +39,7 @@ router.post("/signup", async (req, res, next) => {
 
     const response = await User.create({
       email: email,
-      password: hashPassword,
+      password: hashedPassword,
       username: username,
     });
 
