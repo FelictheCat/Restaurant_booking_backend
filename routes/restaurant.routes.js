@@ -4,8 +4,12 @@ const Restaurant = require("../models/Restaurant.model");
 
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
-router.post("/", verifyToken, async (req, res, next) => {
-  const { name, location, cuisine, tables } = req.body;
+const { verifyOwner } = require("../middlewares/role.middleware");
+
+const uploader = require("../config/cloudinary.config");
+
+router.post("/", verifyToken, verifyOwner, async (req, res, next) => {
+  const { name, location, cuisine, tables, images } = req.body;
 
   try {
     const newRestaurant = await Restaurant.create({
@@ -13,6 +17,7 @@ router.post("/", verifyToken, async (req, res, next) => {
       location,
       cuisine,
       tables,
+      images,
       owner: req.payload._id,
     });
 
@@ -32,6 +37,19 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.get("/my-restaurants", verifyToken, verifyOwner, async (req, res, next) => {
+          try {
+            const restaurants = await Restaurant.find({
+              owner: req.payload._id,
+            });
+      
+            res.json(restaurants);
+          } catch (error) {
+            next(error);
+          }
+        },
+      );
+
 router.get("/:restaurantId", async (req, res, next) => {
   const { restaurantId } = req.params;
 
@@ -45,32 +63,69 @@ router.get("/:restaurantId", async (req, res, next) => {
   }
 });
 
-router.put("/:restaurantId", verifyToken, async (req, res, next) => {
-  const { restaurantId } = req.params;
+router.put("/:restaurantId", verifyToken, verifyOwner, async (req, res, next) => {
+    const { restaurantId } = req.params;
 
-  try {
-    const updatedRestaurant = await Restaurant.findByIdAndUpdate(
-      restaurantId,
-      req.body,
-      { new: true },
-    );
+    try {
+      const restaurant = await Restaurant.findById(restaurantId);
 
-    res.json(updatedRestaurant);
-  } catch (error) {
-    next(error);
-  }
-});
+      if (!restaurant) {
+        return res.status(404).json({ message: "Restaurant not found" });
+      }
 
-router.delete("/:restaurantId", verifyToken, async (req, res, next) => {
-  const { restaurantId } = req.params;
+      // ownership check
+      if (!restaurant.owner.equals(req.payload._id)) {
+        return res.status(403).json({ message: "Not your restaurant" });
+      }
 
-  try {
-    await Restaurant.findByIdAndDelete(restaurantId);
+      const updatedRestaurant = await Restaurant.findByIdAndUpdate(
+        restaurantId,
+        req.body,
+        { new: true },
+      );
 
-    res.sendStatus(204);
-  } catch (error) {
-    next(error);
-  }
-});
+      res.json(updatedRestaurant);
+      
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+
+router.delete("/:restaurantId", verifyToken, verifyOwner, async (req, res, next) => {
+    const { restaurantId } = req.params;
+
+    try {
+    const restaurant = await Restaurant.findById(restaurantId);
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    if (!restaurant.owner.equals(req.payload._id)) {
+      return res.status(403).json({ message: "Not your restaurant" });
+    }
+      await Restaurant.findByIdAndDelete(restaurantId);
+
+      res.sendStatus(204);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.post("/upload", verifyToken, verifyOwner, uploader.single("image"),
+  (req, res, next) => {
+    if (!req.file) {
+      res.status(400).json({ message: "No file uploaded" });
+      return;
+    }
+
+    res.json({
+      imageUrl: req.file.path,
+    });
+  },
+);
 
 module.exports = router;
