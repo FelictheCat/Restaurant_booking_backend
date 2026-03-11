@@ -4,7 +4,7 @@ const bookingSchema = new Schema(
     {
   customer: {
     type: Schema.Types.ObjectId,
-    ref: "customer",
+    ref: "User",
     required: true
   },
 

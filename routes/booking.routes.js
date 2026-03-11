@@ -4,6 +4,7 @@ const Booking = require("../models/Booking.model");
 const Restaurant = require("../models/Restaurant.model")
 
 const { verifyToken } = require("../middlewares/auth.middlewares");
+const { verifyOwner } = require("../middlewares/role.middleware");
 
 router.post("/", verifyToken, async (req, res, next) => {
   const { restaurant, date, guests } = req.body;
@@ -32,6 +33,34 @@ router.get("/my-bookings", verifyToken, async (req, res, next) => {
     next(error);
   }
 });
+
+router.get("/owner-bookings", verifyToken, verifyOwner, async (req, res, next) => {
+
+  try {
+
+    const restaurants = await Restaurant.find({
+      owner: req.payload._id
+    })
+
+    const restaurantIds = restaurants.map(r => r._id)
+
+    const bookings = await Booking.find({
+      restaurant: { $in: restaurantIds }
+    })
+      .populate("restaurant")
+      .populate("customer")
+
+    res.json(bookings)
+
+  } catch (error) {
+    next(error)
+  }
+
+})
+
+
+
+
 
 router.get("/restaurant/:restaurantId", verifyToken, async (req, res, next) => {
   const { restaurantId } = req.params;
