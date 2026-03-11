@@ -1,6 +1,6 @@
 const { Schema, model } = require("mongoose");
 
-const bookingSchema = new schema(
+const bookingSchema = new Schema(
     {
   customer: {
     type: Schema.Types.ObjectId,

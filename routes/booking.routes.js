@@ -81,3 +81,5 @@ router.put("/:bookingId/cancel", verifyToken, async (req, res, next) => {
     next(error);
   }
 });
+
+module.exports = router;
