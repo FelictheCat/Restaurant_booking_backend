@@ -11,6 +11,12 @@ const uploader = require("../config/cloudinary.config");
 router.post("/", verifyToken, verifyOwner, async (req, res, next) => {
   const { name, location, cuisine, tables, images } = req.body;
 
+  console.log("BODY:", req.body)
+  console.log("USER:", req.payload)
+
+
+
+
   try {
     const newRestaurant = await Restaurant.create({
       name,

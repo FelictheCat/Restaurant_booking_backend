@@ -1,6 +1,7 @@
 const router = require("express").Router();
 
 const Booking = require("../models/Booking.model");
+const Restaurant = require("../models/Restaurant.model")
 
 const { verifyToken } = require("../middlewares/auth.middlewares");
 
@@ -8,7 +9,7 @@ router.post("/", verifyToken, async (req, res, next) => {
   const { restaurant, date, guests } = req.body;
 
   try {
-    const newBooking = await Restaurant.create({
+    const newBooking = await Booking.create({
       customer: req.payload._id,
       restaurant,
       date,
