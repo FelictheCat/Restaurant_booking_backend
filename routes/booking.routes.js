@@ -1,7 +1,7 @@
 const router = require("express").Router();
 
 const Booking = require("../models/Booking.model");
-const Restaurant = require("../models/Restaurant.model")
+const Restaurant = require("../models/Restaurant.model");
 
 const { verifyToken } = require("../middlewares/auth.middlewares");
 const { verifyOwner } = require("../middlewares/role.middleware");
@@ -34,33 +34,30 @@ router.get("/my-bookings", verifyToken, async (req, res, next) => {
   }
 });
 
-router.get("/owner-bookings", verifyToken, verifyOwner, async (req, res, next) => {
+router.get(
+  "/owner-bookings",
+  verifyToken,
+  verifyOwner,
+  async (req, res, next) => {
+    try {
+      const restaurants = await Restaurant.find({
+        owner: req.payload._id,
+      });
 
-  try {
+      const restaurantIds = restaurants.map((r) => r._id);
 
-    const restaurants = await Restaurant.find({
-      owner: req.payload._id
-    })
+      const bookings = await Booking.find({
+        restaurant: { $in: restaurantIds },
+      })
+        .populate("restaurant")
+        .populate("customer");
 
-    const restaurantIds = restaurants.map(r => r._id)
-
-    const bookings = await Booking.find({
-      restaurant: { $in: restaurantIds }
-    })
-      .populate("restaurant")
-      .populate("customer")
-
-    res.json(bookings)
-
-  } catch (error) {
-    next(error)
-  }
-
-})
-
-
-
-
+      res.json(bookings);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 router.get("/restaurant/:restaurantId", verifyToken, async (req, res, next) => {
   const { restaurantId } = req.params;
@@ -111,5 +108,26 @@ router.put("/:bookingId/cancel", verifyToken, async (req, res, next) => {
     next(error);
   }
 });
+
+router.put(
+  "/:bookingId/finish",
+  verifyToken,
+  verifyOwner,
+  async (req, res, next) => {
+    const { bookingId } = req.params;
+
+    try {
+      const updatedBooking = await Booking.findByIdAndUpdate(
+        bookingId,
+        { status: "finished" },
+        { new: true },
+      );
+
+      res.json(updatedBooking);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 module.exports = router;
