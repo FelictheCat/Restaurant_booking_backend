@@ -22,7 +22,7 @@ router.post("/signup", async (req, res, next) => {
       errorMessage:
         "Password must follow this pattern (min 8 characters, max 20 characters, include lowercase, include uppercase, include number)",
     });
-    return; 
+    return;
   }
 
   try {
@@ -77,7 +77,9 @@ router.post("/login", async (req, res, next) => {
     const payload = {
       _id: foundUser._id,
       email: foundUser.email,
+      username: foundUser.username,
       role: foundUser.role,
+      profileImage: foundUser.profileImage,
     };
 
     const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
@@ -94,8 +96,22 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-router.get("/verify", verifyToken, (req, res) => {
-  res.status(200).json({ payload: req.payload });
+router.get("/verify", verifyToken, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.payload._id);
+
+    res.status(200).json({
+      payload: {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        profileImage: user.profileImage,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;

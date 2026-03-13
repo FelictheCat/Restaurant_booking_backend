@@ -9,5 +9,8 @@ router.use("/restaurants", restaurantRouter);
 const bookingRouter = require("./booking.routes");
 router.use("/bookings", bookingRouter);
 
+const userRouter = require("./user.routes")
+router.use("/users", userRouter)
+
 
 module.exports = router;
