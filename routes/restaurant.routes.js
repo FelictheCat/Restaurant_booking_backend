@@ -121,17 +121,14 @@ router.delete("/:restaurantId", verifyToken, verifyOwner, async (req, res, next)
   },
 );
 
-router.post("/upload", verifyToken, verifyOwner, uploader.single("image"),
-  (req, res, next) => {
-    if (!req.file) {
-      res.status(400).json({ message: "No file uploaded" });
-      return;
-    }
+router.post("/upload", verifyToken, uploader.single("image"), (req, res) => {
 
-    res.json({
-      imageUrl: req.file.path,
-    });
-  },
-);
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  res.json({ imageUrl: req.file.path });
+
+});
 
 module.exports = router;

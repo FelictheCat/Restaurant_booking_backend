@@ -17,7 +17,7 @@ Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
 *.lnk
-
+test.js
 
 # VS Code
 .vscode/*
